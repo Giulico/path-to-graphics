@@ -1,0 +1,24 @@
+@import "colors";
+
+.root {
+    margin: 0;
+}
+
+.ambrogio {
+    display: block;
+    margin: 5vh auto;
+}
+
+.h1,
+.h2 {
+    text-align: center;
+    font-family: sans-serif;
+}
+
+.h1 {
+    color: $root-h1-color;
+}
+
+.h2 {
+    color: $root-h2-color;
+}
