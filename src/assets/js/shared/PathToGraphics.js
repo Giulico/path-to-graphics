@@ -17,9 +17,10 @@ type Coords = {
 
 class PathToGraphics {
 
-    path: Array<Object>;
+    path: Array<string>;
     settings: Settings;
     lastCoords: Coords;
+    lastControl: Coords;
     firstCoords: Coords;
     firstClose: boolean;
     graphics: Object;
@@ -46,16 +47,10 @@ class PathToGraphics {
     }
 
     constructor(path: string, settings: Object) {
-        this.path = parse(path);
+        this.path = path.match(/[a-df-z][^a-df-z]*/ig);
         this.settings = Object.assign(this.defaultSettings, settings);
-        this.lastCoords = {
-            x: 0,
-            y: 0
-        };
-        this.lastControl = {
-            x: 0,
-            y: 0
-        };
+        this.lastCoords = {x: 0, y: 0};
+        this.lastControl = {};
         this.firstClose = true;
         this.firstCoords = {};
         this.graphics = new PIXI.Graphics(); // eslint-disable-line no-undef
@@ -66,14 +61,16 @@ class PathToGraphics {
         this.graphics.beginFill(this.settings.fill);
 
         this.path.forEach(path => {
-            const {code, command, relative, ...args} = path;
-            const commandAPI = PathToGraphics.getCommandAPI(code);
 
-            this.drawPath(code, relative, args);
+            const commandType = path[0];
+            const args = path.slice(1).trim().split(/[\s,]+|(?=\s?[+\-])/);
 
-            if (commandAPI.length === 0) {
-                throw new Error('commandAPI is empty', command);
+            this.drawPath(commandType, args);
+
+            if (typeof path !== 'string' || path.length === 0) {
+                throw new Error('path is not a valid path', path);
             }
+
         });
 
         this.graphics.endFill();
@@ -81,144 +78,146 @@ class PathToGraphics {
         return this.graphics;
     }
 
-    drawPath(commandType: string, relative: boolean, args: Coords) {
+    drawPath(commandType: string, args: Array<string>) {
+
+        const coords = args.map((arg: string) => Number.parseFloat(arg));
+
+        let offset = {
+            x: 0,
+            y: 0
+        };
+        if (commandType === commandType.toLowerCase()) {
+            // Relative positions
+            offset = this.lastCoords;
+        }
 
         const params = {
 
             m: () => {
-                const coords = {
-                    x: relative ? args.x + this.lastCoords.x : args.x,
-                    y: relative ? args.y + this.lastCoords.y : args.y
-                };
+                coords[0] += offset.x;
+                coords[1] += offset.y;
 
                 this.graphics.moveTo(
-                    coords.x,
-                    coords.y
+                    coords[0],
+                    coords[1]
                 );
 
-                Object.assign(this.lastCoords, coords);
+                this.lastCoords = {
+                    x: coords[0],
+                    y: coords[1]
+                };
 
                 // first coords
-                if (typeof this.firstCoords.x === 'undefined') {
-                    Object.assign(this.firstCoords, coords);
+                if (!this.firstCoords.x) {
+                    this.firstCoords = {
+                        x: coords[0],
+                        y: coords[1]
+                    };
                 }
             },
 
             l: () => {
-                const coords = {
-                    x: relative ? args.x + this.lastCoords.x : args.x,
-                    y: relative ? args.y + this.lastCoords.y : args.y
-                };
+                coords[0] += offset.x;
+                coords[1] += offset.y;
 
                 this.graphics.lineTo(
-                    coords.x,
-                    coords.y
+                    coords[0],
+                    coords[1]
                 );
 
-                Object.assign(this.lastCoords, coords);
+                this.lastCoords = {
+                    x: coords[0],
+                    y: coords[1]
+                };
             },
 
             v: () => {
-                const coords = {
-                    x: this.lastCoords.x,
-                    y: args.y
-                };
+                coords[0] += offset.y;
 
                 this.graphics.lineTo(
-                    coords.x,
-                    coords.y
+                    this.lastCoords.x,
+                    coords[0]
                 );
 
-                Object.assign(this.lastCoords, coords);
+                this.lastCoords.y = coords[0];
             },
 
             h: () => {
-                const coords = {
-                    x: args.x,
-                    y: this.lastCoords.y
-                };
+                coords[0] += offset.x;
 
                 this.graphics.lineTo(
-                    coords.x,
-                    coords.y
+                    coords[0],
+                    this.lastCoords.y
                 );
 
-                Object.assign(this.lastCoords, coords);
+                this.lastCoords.x = coords[0];
             },
 
             c: () => {
-                const coords = {
-                    x1: relative ? args.x1 + this.lastCoords.x : args.x1,
-                    y1: relative ? args.y1 + this.lastCoords.y : args.y1,
-                    x2: relative ? args.x2 + this.lastCoords.x : args.x2,
-                    y2: relative ? args.y2 + this.lastCoords.y : args.y2,
-                    x: relative ? args.x + this.lastCoords.x : args.x, // destination point
-                    y: relative ? args.y + this.lastCoords.y : args.y // destination point
-                };
+                for (let i = 0, l = coords.length; i < l; i += 2) {
+                    coords[i] += offset.x;
+                    coords[i + 1] += offset.y;
+                }
 
                 this.graphics.bezierCurveTo(
-                    coords.x1,
-                    coords.y1,
-                    coords.x2,
-                    coords.y2,
-                    coords.x,
-                    coords.y
+                    coords[0],
+                    coords[1],
+                    coords[2],
+                    coords[3],
+                    coords[4],
+                    coords[5]
                 );
 
-                Object.assign(this.lastCoords, {
-                    x: coords.x,
-                    y: coords.y
-                });
+                this.lastCoords = {
+                    x: coords[4],
+                    y: coords[5]
+                };
 
-                Object.assign(this.lastControl, {
-                    x: coords.x2,
-                    y: coords.y2
-                });
+                this.lastControl = {
+                    x: coords[2],
+                    y: coords[3]
+                };
             },
 
             s: () => {
-                const coords = {
-                    x1: (this.lastCoords.x * 2) - this.lastControl.x,
-                    y1: (this.lastCoords.y * 2) - this.lastControl.y,
-                    x2: relative ? args.x2 + this.lastCoords.x : args.x2,
-                    y2: relative ? args.y2 + this.lastCoords.y : args.y2,
-                    x: relative ? args.x + this.lastCoords.x : args.x, // destination point
-                    y: relative ? args.y + this.lastCoords.y : args.y // destination point
-                };
+                for (let i = 0, l = coords.length; i < l; i += 2) {
+                    coords[i] += offset.x;
+                    coords[i + 1] += offset.y;
+                }
+
+                const sX = (this.lastCoords.x * 2) - this.lastControl.x;
+                const sY = (this.lastCoords.y * 2) - this.lastControl.y;
 
                 this.graphics.bezierCurveTo(
-                    coords.x1,
-                    coords.y1,
-                    coords.x2,
-                    coords.y2,
-                    coords.x,
-                    coords.y
+                    sX,
+                    sY,
+                    coords[0],
+                    coords[1],
+                    coords[2],
+                    coords[3]
                 );
 
-                Object.assign(this.lastCoords, {
-                    x: coords.x,
-                    y: coords.y
-                });
+                this.lastCoords = {
+                    x: coords[2],
+                    y: coords[3]
+                };
 
-                Object.assign(this.lastControl, {
-                    x: coords.x2,
-                    y: coords.y2
-                });
+                this.lastControl = {
+                    x: coords[0],
+                    y: coords[1]
+                };
 
             },
 
             z: () => {
-                const coords = Object.assign({}, this.firstCoords);
-
-                this.graphics
-                    .closePath();
+                this.graphics.closePath();
 
                 if (!this.firstClose) {
-                    console.log('its not the first close');
                     this.graphics.addHole();
                 }
 
-                Object.assign(this.lastCoords, coords);
+                Object.assign(this.lastCoords, this.firstCoords);
+                this.firstCoords = {};
                 this.firstClose = false;
             }
 
