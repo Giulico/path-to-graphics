@@ -8,6 +8,7 @@
     "adaptive-bezier-curve": "^1.0.3",
     "babel-polyfill": "^6.23.0",
     "fontfaceobserver": "^2.0.9",
+    "normalize-svg-coords": "^1.0.0",
     "normalize-svg-path": "^0.1.0",
     "normalize.css": "7.0.0",
     "parse-svg-path": "^0.1.2",

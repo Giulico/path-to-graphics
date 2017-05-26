@@ -4097,6 +4097,12 @@ normalize-range@^0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/normalize-range/-/normalize-range-0.1.2.tgz#2d10c06bdfd312ea9777695a4d28439456b75942"
 
+normalize-svg-coords@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/normalize-svg-coords/-/normalize-svg-coords-1.0.0.tgz#534140992cd537abf500e2d4087587d627b19b91"
+  dependencies:
+    parse-svg-path "^0.1.2"
+
 normalize-svg-path@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/normalize-svg-path/-/normalize-svg-path-0.1.0.tgz#456360e60ece75fbef7b5d7e160480e7ffd16fe5"

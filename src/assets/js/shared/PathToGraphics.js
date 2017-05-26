@@ -1,9 +1,15 @@
 import 'pixi.js';
 import parse from 'svg-path-parser';
-// import normalize from 'normalize-svg-path';
+
+const rangeConversion = (oldValue, oldMin, oldMax, newMin, newMax) =>
+    (((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin;
 
 type Settings = {
-    fill: number
+    fill: number,
+    viewBoxWidth: number,
+    viewBoxHeight: number,
+    min: number,
+    max: number
 };
 
 type Coords = {
@@ -80,7 +86,11 @@ class PathToGraphics {
 
     drawPath(commandType: string, args: Array<string>) {
 
-        const coords = args.map((arg: string) => Number.parseFloat(arg));
+        const coords = args.map((arg: string, i: number) => {
+            return i % 2 === 0
+                ? Math.round(rangeConversion(Number.parseFloat(arg), 0, this.settings.viewBoxWidth, this.settings.min, this.settings.max))
+                : Math.round(rangeConversion(Number.parseFloat(arg), 0, this.settings.viewBoxHeight, this.settings.min, this.settings.max));
+        });
 
         let offset = {
             x: 0,
@@ -209,6 +219,26 @@ class PathToGraphics {
 
             },
 
+            q: () => {
+                for (let i = 0, l = coords.length; i < l; i += 2) {
+                    coords[i] += offset.x;
+                    coords[i + 1] += offset.y;
+                }
+
+                this.graphics.quadraticCurveTo(
+                    coords[0],
+                    coords[1],
+                    coords[2],
+                    coords[3]
+                );
+
+                this.lastCoords = {
+                    x: coords[2],
+                    y: coords[3]
+                };
+
+            },
+
             z: () => {
                 this.graphics.closePath();
 
@@ -228,7 +258,7 @@ class PathToGraphics {
         if (params[commandTypeLower]) {
             params[commandTypeLower]();
         } else {
-            console.log('Parameter not found!');
+            console.log('Parameter not found!', commandTypeLower, coords);
         }
 
     }
