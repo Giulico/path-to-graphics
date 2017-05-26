@@ -1,37 +1,31 @@
-# Ambrogio
-Kick start for front-end applications.
-
-## What's included
-  - Webpack 2
-  - Babel compiler for writing next generation JavaScript
-  - CSS Loader
-    - CSS Modules
-    - "Root-relative" urls
-    - Local scoped css
-    - Composing CSS classes
-    - Importing local class names
-    - SourceMaps
-    - ... [more][css-loader]
-  - Adds CSS to the DOM by injecting a `<style>` tag with [Style loader][style-loader]
-  - CSS & SCSS support
+# SVG Path to PIXI.Graphics
+Converts a path "d" to a PIXI.Graphics object (PIXI v4).
+It also normalize the path coords based on the settings.
 
 ## Getting started
+This repo is build on the top of [Ambrogio boilerplate](https://github.com/Giulico/ambrogio).
+
 ### Start
 Run the project.
 
 ```
+yarn
 npm start
 ```
-then point the browser to [http://localhost:8080/][localhost]
+then point the browser to [http://localhost:10100/][localhost]
 
-### Build
-Build the project without serve it.
-
+### Example
 ```
-npm build
+const graphicsFromPath = new PathToGraphics(this.B, {
+    viewBoxWidth: 110,
+    viewBoxHeight: 100,
+    min: 0,
+    max: 500,
+    fill: 0xFFFFFF
+});
+const graphics = graphicsFromPath.getGraphics();
+
+...
+
+this.app.stage.addChild(graphics);
 ```
-
-
-[css-loader]: <https://github.com/webpack/css-loader>
-[style-loader]: <https://github.com/webpack/style-loader>
-[localhost]: <http://localhost:8080/>
