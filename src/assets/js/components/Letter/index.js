@@ -74,6 +74,7 @@ class Letter extends Component {
         this.canvasContainer.appendChild(this.canvas);
 
         const graphicsFromPath = new PathToGraphics(this.B, {
+            normalize: true,
             viewBoxWidth: 110,
             viewBoxHeight: 100,
             min: 0,

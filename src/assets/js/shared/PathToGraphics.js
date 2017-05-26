@@ -32,7 +32,8 @@ class PathToGraphics {
     graphics: Object;
 
     defaultSettings = {
-        fill: 0x000000
+        fill: 0x000000,
+        normalize: false
     }
 
     static getCommandAPI(commandType: string): string {
@@ -87,9 +88,22 @@ class PathToGraphics {
     drawPath(commandType: string, args: Array<string>) {
 
         const coords = args.map((arg: string, i: number) => {
-            return i % 2 === 0
-                ? Math.round(rangeConversion(Number.parseFloat(arg), 0, this.settings.viewBoxWidth, this.settings.min, this.settings.max))
-                : Math.round(rangeConversion(Number.parseFloat(arg), 0, this.settings.viewBoxHeight, this.settings.min, this.settings.max));
+            let c = Number.parseFloat(arg);
+
+            if (this.settings.normalize && (typeof this.settings.viewBoxWidth === 'undefined'
+                    || typeof this.settings.viewBoxHeight === 'undefined'
+                    || typeof this.settings.min === 'undefined'
+                    || typeof this.settings.max === 'undefined')) {
+                throw new Error('If you want to normalize the path, please specify the viewBoxWidth, viewBoxHeight, min and max settings.');
+            }
+
+            if (this.settings.normalize) {
+                c = i % 2 === 0
+                    ? Math.round(rangeConversion(c, 0, this.settings.viewBoxWidth, this.settings.min, this.settings.max))
+                    : Math.round(rangeConversion(c, 0, this.settings.viewBoxHeight, this.settings.min, this.settings.max));
+            }
+
+            return c;
         });
 
         let offset = {
