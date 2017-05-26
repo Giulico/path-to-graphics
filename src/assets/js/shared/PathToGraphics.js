@@ -1,5 +1,4 @@
 import 'pixi.js';
-import parse from 'svg-path-parser';
 
 const rangeConversion = (oldValue, oldMin, oldMax, newMin, newMax) =>
     (((oldValue - oldMin) * (newMax - newMin)) / (oldMax - oldMin)) + newMin;
